@@ -1,0 +1,36 @@
+#!/bin/sh
+
+if [ -z $1 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
+    echo "Usage: dolatex file" 
+    echo "  if file exists, opens text editor and pdf viewer, compiling and updating pdf upon file changes"
+    echo "  otherwise, an example latex document is created at the specified path"
+    exit
+fi
+
+#strips extension of file, adds .pdf
+OUTPUT=$(echo $1 | cut -d'.' -f1).pdf
+
+#if file does not exist, create example latex document
+if [ ! -f $1 ]; then
+    echo "\\documentclass[12pt]{article}" > $1
+    echo "\\begin{document}" >> $1
+    echo "Newly generated document" >> $1
+    echo "\\end{document}" >> $1
+fi
+
+#if pdf output does not exist yet
+if [ ! -f $OUTPUT ]; then
+    texi2pdf -b -q -o $OUTPUT $1
+fi
+
+#recompile latex document in background when change detected, pipe stderr to /dev/null
+when-changed -q -r -s $1 texi2pdf -b -q -o $OUTPUT $1  2> /dev/null &
+
+#open pdf viewer in background
+zathura $OUTPUT & 
+
+#open specified text editor in foreground
+$EDITOR $1
+
+#when text editor exits, kill when-changed, zathura pdf viewer, and dolatex
+kill 0
