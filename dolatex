@@ -8,7 +8,7 @@ if [ -z $1 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
 fi
 
 #strips extension of file, adds .pdf
-OUTPUT=$(echo $1 | cut -d'.' -f1).pdf
+OUTPUT=$(echo ${1%.*}).pdf
 
 #if file does not exist, create example latex document
 if [ ! -f $1 ]; then
@@ -32,5 +32,5 @@ zathura $OUTPUT &
 #open specified text editor in foreground
 $EDITOR $1
 
-#when text editor exits, kill when-changed, zathura pdf viewer, and dolatex
+#when text editor exited, kill when-changed and zathura pdf viewer
 kill 0
